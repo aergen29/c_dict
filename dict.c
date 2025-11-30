@@ -198,27 +198,29 @@ Dict *addDict(Dict *d, DataType type, char *key, void *value)
 }
 /* ADD DICT END */
 
-/***** GET DICT *****/
+/***** GET DICT VARIABLE *****/
 
-Dict *getDict(Dict *d, char *key)
+Dict *getDictVariable(Dict *d, char *key)
 {
     Dict *temp = d;
-    while (temp != NULL && (strlen(key) != strlen(temp->key) || strcmp(key, temp->key) != 0))
+    while ((strlen(key) != strlen(temp->key) || strcmp(key, temp->key) != 0))
     {
-        temp = d->next;
+        temp = temp->next;
+        if (temp == NULL)
+            break;
     }
     return temp;
 }
-void getDict_var(Dict *d, char *key, var *variable)
+void getDictVariable_var(Dict *d, char *key, var *variable)
 {
-    Dict *dict = getDict(d, key);
+    Dict *dict = getDictVariable(d, key);
     if (dict == NULL)
         variable = NULL;
     else
         variable = &dict->value;
 }
 
-/* GET DICT END */
+/* GET DICT VARIABLE END */
 
 /***** SET DICT *****/
 
@@ -263,13 +265,12 @@ Dict *jsonToDict(char *json)
             value[strlen(value) - 1] = '\0';
         /* Divide END */
 
-
         /* FIND TYPE */
         if (type == TYPE_STRING)
             ;
-        else if (strncmp(value, "null",4) == 0 && strlen(value) == 4)
+        else if (strncmp(value, "null", 4) == 0 && strlen(value) == 4)
             type = TYPE_NULL;
-        else if ((strncmp(value, "true",4) == 0 && strlen(value) == 4) || (strncmp(value, "false",5) == 0 && strlen(value) == 5))
+        else if ((strncmp(value, "true", 4) == 0 && strlen(value) == 4) || (strncmp(value, "false", 5) == 0 && strlen(value) == 5))
             type = TYPE_BOOL;
         else if (strchr(value, '.') != NULL)
             type = TYPE_DOUBLE;
@@ -315,8 +316,6 @@ Dict *jsonToDict(char *json)
         is_head = 0;
 
         /* CREATE DICT END */
-
-        // printf("KEY:%s\tVALUE:%s\n", key, value);
 
         line = strtok_r(NULL, ",", &statusOne);
     }
@@ -365,21 +364,57 @@ void dictToJson(Dict *dict, char *result)
     strcat(result, "}");
 }
 
+void dictArrayToJson(Dict *dicts[], int length, char *result)
+{
+    *result = '\0';
+    strcat(result, "[");
+    for (int i = 0; i < length; i++)
+    {
+        if (dicts[i] == NULL)
+            continue;
+        char temp[256] = {0};
+        dictToJson(dicts[i], temp);
+        strcat(result, temp);
+        if (i != length - 1)
+            strcat(result, ",");
+    }
+    strcat(result, "]");
+}
+
 /* DICT TO JSON END */
 void getvartests();
 void createDictTest();
 Dict *addDictTest();
 void dictToJsonTest();
+void dictArrayToJsonTest();
 void main()
 {
     printf("Hello World!\n");
     // getvartests();
     // createDictTest();
     // addDictTest();
-    dictToJsonTest();
+    // dictToJsonTest();
+    dictArrayToJsonTest();
 }
 
 /* TESTS */
+void dictArrayToJsonTest()
+{
+    char result[2048] = {0};
+    Dict *dicts[5];
+    for (int i = 0; i < 5; i++)
+    {
+        dicts[i] = addDictTest();
+    }
+    setDictKey(getDictVariable(dicts[3], "age"), "ageV2");
+    Dict *tempDict = getDictVariable(dicts[3], "address");
+    if (tempDict == NULL)
+        printf("NOT FOUNDED");
+    else
+        tempDict->value = get_var_string("Fatih mah. Şalgamlı cad. no:35 daire:1");
+    dictArrayToJson(dicts, 5, result);
+    printf("%s\n", result);
+}
 
 void dictToJsonTest()
 {
