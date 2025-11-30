@@ -79,24 +79,25 @@ var get_var_double(double val)
 var get_var_string(char *val)
 {
     var result;
-    result.type = TYPE_INT;
+    result.type = TYPE_STRING;
     int len = strlen(val);
-    char *strVal = (char *)malloc(sizeof(char) * (len));
+    char *strVal = (char *)malloc(sizeof(char) * (len + 1));
     strncpy(strVal, val, len);
+    strVal[len] = '\0';
     result.value.string_v = strVal;
     return result;
 }
 var get_var_bool(int val)
 {
     var result;
-    result.type = TYPE_DOUBLE;
+    result.type = TYPE_BOOL;
     result.value.bool_v = val;
     return result;
 }
 var get_var_null()
 {
     var result;
-    result.type = TYPE_INT;
+    result.type = TYPE_NULL;
     result.value.null_v = NULL;
     return result;
 }
@@ -192,16 +193,84 @@ Dict *addDict(Dict *d, DataType type, char *key, void *value)
     return addDict_var(d, key, variable);
 }
 /* ADD DICT END */
+
+/***** DICT TO JSON *****/
+
+void dictToJson(Dict *dict, char *result)
+{
+    strcat(result, "{");
+    Dict *temp = dict;
+    while (temp != NULL)
+    {
+        strcat(result, "\"");
+        strcat(result, temp->key);
+        strcat(result, "\":");
+        char str[100];
+        switch (temp->value.type)
+        {
+        case TYPE_INT:
+            sprintf(str, "%d", temp->value.value.int_v);
+            strcat(result, str);
+            break;
+        case TYPE_DOUBLE:
+            sprintf(str, "%f", temp->value.value.double_v);
+            strcat(result, str);
+            break;
+        case TYPE_STRING:
+            strcat(result, "\"");
+            strcat(result, temp->value.value.string_v);
+            strcat(result, "\"");
+            break;
+        case TYPE_BOOL:
+            strcat(result, temp->value.value.bool_v ? "true" : "false");
+            break;
+        case TYPE_NULL:
+            strcat(result, "null");
+            break;
+        default:
+            strcat(result, "null");
+            break;
+        }
+        if (temp->next != NULL)
+            strcat(result, ",");
+        temp = temp->next;
+    }
+    strcat(result, "}");
+}
+
+/* DICT TO JSON END */
 void getvartests();
 void createDictTest();
+Dict *addDictTest();
+void dictToJsonTest();
 void main()
 {
     printf("Hello World!\n");
     // getvartests();
-    createDictTest();
+    // createDictTest();
+    // addDictTest();
+    dictToJsonTest();
 }
 
 /* TESTS */
+
+void dictToJsonTest(){
+    char result[1024] = {0};
+    Dict *dict = addDictTest();
+    dictToJson(dict,result);
+    printf("%s\n",result); 
+}
+Dict *addDictTest()
+{
+    Dict *dict = createDict(TYPE_STRING, "name", "Abdullah");
+    addDict_int(dict, "age", 23);
+    addDict_bool(dict, "is_verified", 1);
+    addDict_null(dict, "address");
+    addDict_double(dict, "salary", 21001.15);
+    addDict_string(dict,"role","admin");
+    return dict;
+}
+
 void createDictTest()
 {
     /*DICT VAR*/
@@ -215,9 +284,6 @@ void createDictTest()
     // STRING
     Dict *dict_var_string = createDict_var("string", get_var_string("PIRaNHA"));
     printf("dict_var_string=>key:%s\tvalue:%s\n", dict_var_string->key, dict_var_string->value.value.string_v);
-    // BOOL
-    Dict *dict_var_bool = createDict_var("bool", get_var_bool(0));
-    printf("dict_var_bool=>key:%s\tvalue:%s\n", dict_var_bool->key, dict_var_bool->value.value.bool_v ? "true" : "false");
     // BOOL
     Dict *dict_var_bool = createDict_var("bool", get_var_bool(0));
     printf("dict_var_bool=>key:%s\tvalue:%s\n", dict_var_bool->key, dict_var_bool->value.value.bool_v ? "true" : "false");
@@ -254,6 +320,9 @@ void getvartests()
     char *string_value = "FREEMAN WAS HERE";
     var string_v = get_var(TYPE_STRING, string_value);
     printf("string_v:%s\n", string_v.value.string_v);
+    // STRING get_var
+    var string_v2 = get_var(TYPE_STRING, "FREEMAN WAS HERE2");
+    printf("string_v:%s\n", string_v2.value.string_v);
     // BOOL get_var
     int bool_value = 1;
     var bool_v = get_var(TYPE_DOUBLE, &bool_value);
