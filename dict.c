@@ -109,7 +109,7 @@ Dict *createDict_var(char *key, var variable)
 {
     Dict *result = (Dict *)malloc(sizeof(Dict));
     char *newKey = (char *)malloc(sizeof(char) * strlen(key));
-    strcpy(newKey,key);
+    strcpy(newKey, key);
     result->key = newKey;
     result->value = variable;
     return result;
@@ -153,7 +153,7 @@ Dict *addDict_var(Dict *d, char *key, var variable)
 {
     Dict *result = (Dict *)malloc(sizeof(Dict));
     char *newKey = (char *)malloc(sizeof(char) * strlen(key));
-    strcpy(newKey,key);
+    strcpy(newKey, key);
     result->key = newKey;
     result->value = variable;
     Dict *temp = d;
@@ -225,13 +225,103 @@ void getDict_var(Dict *d, char *key, var *variable)
 void setDictKey(Dict *d, char *key)
 {
     char *newKey = (char *)malloc(sizeof(char) * strlen(key));
-    strcpy(newKey,key);
+    strcpy(newKey, key);
     d->key = newKey;
 }
 
 /* SET DICT END */
 
 /***** DICT TO JSON *****/
+
+Dict *jsonToDict(char *json)
+{
+    Dict *result = (Dict *)malloc(sizeof(Dict));
+    char temp[250];
+    char *statusOne, *statusTwo;
+    char *line = strtok_r(json, ",", &statusOne);
+    int is_head = 1;
+    while (line != NULL)
+    {
+        DataType type = TYPE_INT;
+        char *key = strtok_r(line, ":", &statusTwo);
+        /* Divide */
+        if (key[0] == '{')
+            key = key + 1;
+        if (key[0] == '"')
+            key = key + 1;
+        if (key[strlen(key) - 1] == '"')
+            key[strlen(key) - 1] = '\0';
+        char *value = strtok_r(NULL, ":", &statusTwo);
+        if (value[0] == '"')
+        {
+            type = TYPE_STRING;
+            value = value + 1;
+        }
+        if (value[strlen(value) - 1] == '}')
+            value[strlen(value) - 1] = '\0';
+        if (value[strlen(value) - 1] == '"')
+            value[strlen(value) - 1] = '\0';
+        /* Divide END */
+
+
+        /* FIND TYPE */
+        if (type == TYPE_STRING)
+            ;
+        else if (strncmp(value, "null",4) == 0 && strlen(value) == 4)
+            type = TYPE_NULL;
+        else if ((strncmp(value, "true",4) == 0 && strlen(value) == 4) || (strncmp(value, "false",5) == 0 && strlen(value) == 5))
+            type = TYPE_BOOL;
+        else if (strchr(value, '.') != NULL)
+            type = TYPE_DOUBLE;
+        else
+            type = TYPE_INT;
+        /* FIND TYPE END */
+
+        /* CREATE DICT */
+
+        switch (type)
+        {
+        case TYPE_STRING:
+            if (is_head)
+                result = createDict(TYPE_STRING, key, value);
+            else
+                addDict(result, TYPE_STRING, key, value);
+            break;
+        case TYPE_INT:
+            if (is_head)
+                result = createDict_int(key, atoi(value));
+            else
+                addDict_int(result, key, atoi(value));
+            break;
+        case TYPE_DOUBLE:
+            if (is_head)
+                result = createDict_double(key, strtod(value, NULL));
+            else
+                addDict_double(result, key, strtod(value, NULL));
+            break;
+        case TYPE_BOOL:
+            if (is_head)
+                result = createDict_bool(key, strcmp(value, "true") == 0);
+            else
+                addDict_bool(result, key, strcmp(value, "true") == 0);
+            break;
+        case TYPE_NULL:
+            if (is_head)
+                result = createDict_null(key);
+            else
+                addDict_null(result, key);
+            break;
+        }
+        is_head = 0;
+
+        /* CREATE DICT END */
+
+        // printf("KEY:%s\tVALUE:%s\n", key, value);
+
+        line = strtok_r(NULL, ",", &statusOne);
+    }
+    return result;
+}
 
 void dictToJson(Dict *dict, char *result)
 {
@@ -293,10 +383,13 @@ void main()
 
 void dictToJsonTest()
 {
-    char result[1024] = {0};
+    char result[1024] = {0}, result2[1024] = {0};
     Dict *dict = addDictTest();
     dictToJson(dict, result);
     printf("%s\n", result);
+    Dict *dict2 = jsonToDict(result);
+    dictToJson(dict2, result2);
+    printf("%s\n", result2);
 }
 Dict *addDictTest()
 {
