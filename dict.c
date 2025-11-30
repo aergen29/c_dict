@@ -108,7 +108,9 @@ var get_var_null()
 Dict *createDict_var(char *key, var variable)
 {
     Dict *result = (Dict *)malloc(sizeof(Dict));
-    result->key = key;
+    char *newKey = (char *)malloc(sizeof(char) * strlen(key));
+    strcpy(newKey,key);
+    result->key = newKey;
     result->value = variable;
     return result;
 }
@@ -150,7 +152,9 @@ Dict *createDict(DataType type, char *key, void *value)
 Dict *addDict_var(Dict *d, char *key, var variable)
 {
     Dict *result = (Dict *)malloc(sizeof(Dict));
-    result->key = key;
+    char *newKey = (char *)malloc(sizeof(char) * strlen(key));
+    strcpy(newKey,key);
+    result->key = newKey;
     result->value = variable;
     Dict *temp = d;
     while (temp->next != NULL)
@@ -193,6 +197,39 @@ Dict *addDict(Dict *d, DataType type, char *key, void *value)
     return addDict_var(d, key, variable);
 }
 /* ADD DICT END */
+
+/***** GET DICT *****/
+
+Dict *getDict(Dict *d, char *key)
+{
+    Dict *temp = d;
+    while (temp != NULL && (strlen(key) != strlen(temp->key) || strcmp(key, temp->key) != 0))
+    {
+        temp = d->next;
+    }
+    return temp;
+}
+void getDict_var(Dict *d, char *key, var *variable)
+{
+    Dict *dict = getDict(d, key);
+    if (dict == NULL)
+        variable = NULL;
+    else
+        variable = &dict->value;
+}
+
+/* GET DICT END */
+
+/***** SET DICT *****/
+
+void setDictKey(Dict *d, char *key)
+{
+    char *newKey = (char *)malloc(sizeof(char) * strlen(key));
+    strcpy(newKey,key);
+    d->key = newKey;
+}
+
+/* SET DICT END */
 
 /***** DICT TO JSON *****/
 
@@ -254,11 +291,12 @@ void main()
 
 /* TESTS */
 
-void dictToJsonTest(){
+void dictToJsonTest()
+{
     char result[1024] = {0};
     Dict *dict = addDictTest();
-    dictToJson(dict,result);
-    printf("%s\n",result); 
+    dictToJson(dict, result);
+    printf("%s\n", result);
 }
 Dict *addDictTest()
 {
@@ -267,7 +305,7 @@ Dict *addDictTest()
     addDict_bool(dict, "is_verified", 1);
     addDict_null(dict, "address");
     addDict_double(dict, "salary", 21001.15);
-    addDict_string(dict,"role","admin");
+    addDict(dict, TYPE_STRING, "role", "admin");
     return dict;
 }
 
