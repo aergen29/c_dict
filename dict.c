@@ -198,6 +198,40 @@ Dict *addDict(Dict *d, DataType type, char *key, void *value)
 }
 /* ADD DICT END */
 
+/***** DELETE DICT *****/
+int deleteDict(Dict **head, char *key)
+{
+    if (*head == NULL)
+        return 0;
+
+    Dict *current = *head;
+    Dict *prev = NULL;
+    while (current != NULL)
+    {
+        if (strcmp(current->key, key) == 0 && strlen(current->key) == strlen(key))
+        {
+            if (prev == NULL)
+                *head = current->next;
+
+            else
+                prev->next = current->next;
+
+            free(current->key);
+
+            if (current->value.type == TYPE_STRING)
+                free(current->value.value.string_v);
+
+            free(current);
+            return 1;
+        }
+        prev = current;
+        current = current->next;
+    }
+
+    return 0;
+}
+/* DELETE DICT END */
+
 /***** GET DICT VARIABLE *****/
 
 Dict *getDictVariable(Dict *d, char *key)
@@ -387,6 +421,7 @@ void createDictTest();
 Dict *addDictTest();
 void dictToJsonTest();
 void dictArrayToJsonTest();
+void deleteDictTest();
 void main()
 {
     printf("Hello World!\n");
@@ -394,10 +429,28 @@ void main()
     // createDictTest();
     // addDictTest();
     // dictToJsonTest();
-    dictArrayToJsonTest();
+    // dictArrayToJsonTest();
+    deleteDictTest();
 }
 
 /* TESTS */
+
+void deleteDictTest()
+{
+    Dict *dict = addDictTest();
+    char result[1024] = {0};
+    dictToJson(dict, result);
+    printf("%s\n", result);
+    *result = '\0';
+    deleteDict(&dict, "name");
+    dictToJson(dict, result);
+    printf("%s\n", result);
+    *result = '\0';
+    deleteDict(&dict, "salary");
+    dictToJson(dict, result);
+    printf("%s\n", result);
+}
+
 void dictArrayToJsonTest()
 {
     char result[2048] = {0};
