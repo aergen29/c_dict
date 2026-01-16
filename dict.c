@@ -8,12 +8,18 @@ typedef enum DataType
     TYPE_DOUBLE,
     TYPE_STRING,
     TYPE_BOOL,
-    TYPE_NULL
+    TYPE_NULL,
+    TYPE_INT_ARR,
+    TYPE_DOUBLE_ARR,
+    TYPE_STRING_ARR,
+    TYPE_BOOL_ARR,
+    TYPE_NULL_ARR
 } DataType;
 
 typedef struct var
 {
     DataType type;
+    size_t size;
     union
     {
         int int_v;
@@ -21,6 +27,10 @@ typedef struct var
         char *string_v;
         int bool_v;
         void *null_v;
+        int *int_arr_v;
+        double *double_arr_v;
+        char **string_arr_v;
+        int *bool_arr_v;
     } value;
 } var;
 
@@ -40,6 +50,10 @@ var get_var_string(char *);
 var get_var_bool(int);
 var get_var_null();
 var get_var(DataType, void *);
+var get_var_int_arr(int *, int);
+var get_var_double_arr(double *, int);
+var get_var_bool_arr(int *, int);
+var get_var_string_arr(char **, int);
 
 /***    GET VAR   ****/
 var get_var(DataType type, void *val)
@@ -62,6 +76,24 @@ var get_var(DataType type, void *val)
         return get_var_null();
     }
 }
+
+var get_var_arr(DataType type, void *val, int length)
+{
+    switch (type)
+    {
+    case TYPE_INT_ARR:
+        return get_var_int_arr((int *)val, length);
+    case TYPE_DOUBLE_ARR:
+        return get_var_double_arr((double *)val, length);
+    case TYPE_BOOL_ARR:
+        return get_var_bool_arr((int *)val, length);
+    case TYPE_STRING_ARR:
+        return get_var_string_arr((char **)val, length);
+    default:
+        return get_var_null();
+    }
+}
+
 var get_var_int(int val)
 {
     var result;
@@ -101,6 +133,66 @@ var get_var_null()
     result.value.null_v = NULL;
     return result;
 }
+
+var get_var_int_arr(int val[], int length)
+{
+    var result;
+    result.type = TYPE_INT_ARR;
+    result.size = length;
+    int *arr = (int *)malloc(sizeof(int) * length);
+    for (int i = 0; i < length; i++)
+        arr[i] = val[i];
+    result.value.int_arr_v = arr;
+    return result;
+}
+
+var get_var_bool_arr(int val[], int length)
+{
+    var result;
+    result.type = TYPE_BOOL_ARR;
+    result.size = length;
+    int *arr = (int *)malloc(sizeof(int) * length);
+    for (int i = 0; i < length; i++)
+        arr[i] = val[i];
+    result.value.bool_arr_v = arr;
+    return result;
+}
+
+var get_var_double_arr(double val[], int length)
+{
+    var result;
+    result.type = TYPE_DOUBLE_ARR;
+    result.size = length;
+    double *arr = (double *)malloc(sizeof(double) * length);
+    for (int i = 0; i < length; i++)
+        arr[i] = val[i];
+    result.value.double_arr_v = arr;
+    return result;
+}
+
+var get_var_string_arr(char *val[], int length)
+{
+    var result;
+    result.type = TYPE_STRING_ARR;
+    result.size = length;
+    char **arr = (char **)malloc(sizeof(char *) * length);
+    for (int i = 0; i < length; i++)
+    {
+        arr[i] = (char *)malloc(sizeof(char) * (strlen(val[i]) + 1));
+        strcpy(arr[i], val[i]);
+    }
+    result.value.string_arr_v = arr;
+    return result;
+}
+
+var get_var_null_arr(int length)
+{
+    var result;
+    result.type = TYPE_NULL_ARR;
+    result.size = length;
+    return result;
+}
+
 /* GET VAR END */
 
 /***    CREATE DICT   ****/
@@ -141,11 +233,41 @@ Dict *createDict_null(char *key)
     return createDict_var(key, variable);
 }
 
+Dict *createDict_int_arr(char *key, int val[], int length)
+{
+    var variable = get_var_int_arr(val, length);
+    return createDict_var(key, variable);
+}
+Dict *createDict_double_arr(char *key, double val[], int length)
+{
+    var variable = get_var_double_arr(val, length);
+    return createDict_var(key, variable);
+}
+
+Dict *createDict_bool_arr(char *key, int val[], int length)
+{
+    var variable = get_var_bool_arr(val, length);
+    return createDict_var(key, variable);
+}
+
+Dict *createDict_string_arr(char *key, char *val[], int length)
+{
+    var variable = get_var_string_arr(val, length);
+    return createDict_var(key, variable);
+}
+
+Dict *createDict_null_arr(char *key, int length)
+{
+    var variable = get_var_null_arr(length);
+    return createDict_var(key, variable);
+}
+
 Dict *createDict(DataType type, char *key, void *value)
 {
     var variable = get_var(type, value);
     return createDict_var(key, variable);
 }
+
 /* CREATE DICT END */
 /***** ADD DICT *****/
 
@@ -196,6 +318,37 @@ Dict *addDict(Dict *d, DataType type, char *key, void *value)
     var variable = get_var(type, value);
     return addDict_var(d, key, variable);
 }
+
+Dict *addDict_int_arr(Dict *d, char *key, int val[], int length)
+{
+    var variable = get_var_int_arr(val, length);
+    return addDict_var(d, key, variable);
+}
+
+Dict *addDict_double_arr(Dict *d, char *key, double val[], int length)
+{
+    var variable = get_var_double_arr(val, length);
+    return addDict_var(d, key, variable);
+}
+
+Dict *addDict_bool_arr(Dict *d, char *key, int val[], int length)
+{
+    var variable = get_var_bool_arr(val, length);
+    return addDict_var(d, key, variable);
+}
+
+Dict *addDict_string_arr(Dict *d, char *key, char *val[], int length)
+{
+    var variable = get_var_string_arr(val, length);
+    return addDict_var(d, key, variable);
+}
+
+Dict *addDict_null_arr(Dict *d, char *key, int length)
+{
+    var variable = get_var_null_arr(length);
+    return addDict_var(d, key, variable);
+}
+
 /* ADD DICT END */
 
 /***** DELETE DICT *****/
@@ -218,8 +371,32 @@ int deleteDict(Dict **head, char *key)
 
             free(current->key);
 
-            if (current->value.type == TYPE_STRING)
+            switch (current->value.type)
+            {
+            case TYPE_STRING:
                 free(current->value.value.string_v);
+                break;
+            case TYPE_BOOL_ARR:
+                free(current->value.value.bool_arr_v);
+                break;
+            case TYPE_DOUBLE_ARR:
+                free(current->value.value.double_arr_v);
+                break;
+            case TYPE_INT_ARR:
+                free(current->value.value.int_arr_v);
+                break;
+
+            case TYPE_STRING_ARR:
+                for (int i = current->value.size - 1; i >= 0; i--)
+                {
+                    free(current->value.value.string_arr_v[i]);
+                }
+                free(current->value.value.string_arr_v);
+                break;
+
+            default:
+                break;
+            }
 
             free(current);
             return 1;
@@ -415,6 +592,140 @@ void dictArrayToJson(Dict *dicts[], int length, char *result)
     strcat(result, "]");
 }
 
+/* ARRAY VALUES */
+void int_arr_to_json(int arr[], char *result, int length)
+{
+    *result = '[';
+    result[1] = '\0';
+    int i = 0;
+    char snum[11];
+    for (; i < length; i++)
+    {
+        sprintf(snum, "%d,", arr[i]);
+        strcat(result, snum);
+    }
+    result[strlen(result) - 1] = '\0';
+    strcat(result, "]");
+}
+void double_arr_to_json(double arr[], char *result, int length)
+{
+    *result = '[';
+    result[1] = '\0';
+    int i = 0;
+    char snum[24];
+    for (; i < length; i++)
+    {
+        sprintf(snum, "%f,", arr[i]);
+        strcat(result, snum);
+    }
+    result[strlen(result) - 1] = '\0';
+    strcat(result, "]");
+}
+void bool_arr_to_json(int arr[], char *result, int length)
+{
+    *result = '[';
+    result[1] = '\0';
+    int i = 0;
+    char snum[8];
+    for (; i < length; i++)
+    {
+        sprintf(snum, "%s,", arr[i] == 0 ? "false" : "true");
+        strcat(result, snum);
+    }
+    result[strlen(result) - 1] = '\0';
+    strcat(result, "]");
+}
+
+void null_arr_to_json(char *result, int length)
+{
+    *result = '[';
+    result[1] = '\0';
+    int i = 0;
+    char snum[8];
+    for (; i < length; i++)
+    {
+        sprintf(snum, "%s,", "null");
+        strcat(result, snum);
+    }
+    result[strlen(result) - 1] = '\0';
+    strcat(result, "]");
+}
+
+void string_arr_to_json(char *arr[], char *result, int length)
+{
+    *result = '[';
+    result[1] = '\0';
+    int i = 0;
+    char snum[1024];
+    for (; i < length; i++)
+    {
+        sprintf(snum, "\"%s\",", arr[i]);
+        strcat(result, snum);
+    }
+    result[strlen(result) - 1] = '\0';
+    strcat(result, "]");
+}
+/*----------*/
+void dictToJson_arr(Dict *dict, char *result)
+{
+    *result = '{';
+    *(result + 1) = '\0';
+    Dict *temp = dict;
+    char str[100];
+    while (temp != NULL)
+    {
+        strcat(result, "\"");
+        strcat(result, temp->key);
+        strcat(result, "\":");
+        char tempStr[1024] = {0};
+        switch (temp->value.type)
+        {
+        case TYPE_INT_ARR:
+            int_arr_to_json(temp->value.value.int_arr_v, tempStr, temp->value.size);
+            break;
+        case TYPE_DOUBLE_ARR:
+            double_arr_to_json(temp->value.value.double_arr_v, tempStr, temp->value.size);
+            break;
+        case TYPE_NULL_ARR:
+            null_arr_to_json(tempStr, temp->value.size);
+            break;
+        case TYPE_BOOL_ARR:
+            bool_arr_to_json(temp->value.value.bool_arr_v, tempStr, temp->value.size);
+            break;
+        case TYPE_STRING_ARR:
+            string_arr_to_json(temp->value.value.string_arr_v, tempStr, temp->value.size);
+            break;
+        case TYPE_INT:
+            sprintf(str, "%d", temp->value.value.int_v);
+            strcat(result, str);
+            break;
+        case TYPE_DOUBLE:
+            sprintf(str, "%f", temp->value.value.double_v);
+            strcat(result, str);
+            break;
+        case TYPE_STRING:
+            strcat(result, "\"");
+            strcat(result, temp->value.value.string_v);
+            strcat(result, "\"");
+            break;
+        case TYPE_BOOL:
+            strcat(result, temp->value.value.bool_v ? "true" : "false");
+            break;
+        case TYPE_NULL:
+            strcat(result, "null");
+            break;
+        default:
+            strcat(result, "null");
+            break;
+        }
+        strcat(result, tempStr);
+        strcat(result,",");
+        temp = temp->next;
+    }
+    result[strlen(result)-1] = '}';
+}
+/* ARRAY VALUES */
+
 /* DICT TO JSON END */
 void getvartests();
 void createDictTest();
@@ -422,18 +733,44 @@ Dict *addDictTest();
 void dictToJsonTest();
 void dictArrayToJsonTest();
 void deleteDictTest();
+void dictToJson_arrTest();
 void main()
 {
     printf("Hello World!\n");
+    // char result[1024] = {0};
+    // int arr[] = {1, 3, 698, 67, 36, 4156, 7855, 631, 75};
+    // int_arr_to_json(arr, result, 9);
+    // printf("%s\n", result);
+    dictToJson_arrTest();
     // getvartests();
     // createDictTest();
     // addDictTest();
     // dictToJsonTest();
     // dictArrayToJsonTest();
-    deleteDictTest();
+    // deleteDictTest();
 }
 
 /* TESTS */
+void dictToJson_arrTest()
+{
+    Dict *dict = createDict_bool("bool",0);
+    addDict_double(dict,"double",15.68);
+    addDict_int(dict,"int",29);
+    addDict_null(dict,"null");
+    addDict_string(dict,"string","ALLAME");
+    int barr[7] = {0,0,0,1,0,1,1};
+    double darr[5] = {1.52,2.29,3.45,8.75,10.04};
+    int iarr[4] = {2,9,29,2929};
+    char *strarr[3] = {"FREEMAN","WAS","HERE"};
+    addDict_bool_arr(dict,"boolarr",barr,7);
+    addDict_double_arr(dict,"doublearr",darr,5);
+    addDict_int_arr(dict,"intarr",iarr,4);
+    addDict_null_arr(dict,"nullarr",22);
+    addDict_string_arr(dict,"stringarr",strarr,3);
+    char json[1024]={0};
+    dictToJson_arr(dict,json);
+    printf("\ntest\n\t%s\n",json);
+}
 
 void deleteDictTest()
 {
