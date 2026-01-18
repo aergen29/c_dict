@@ -1,1 +1,1 @@
-# Dict libary for C
+# Dict library for C
