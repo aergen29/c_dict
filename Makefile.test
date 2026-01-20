@@ -1,0 +1,32 @@
+CC = gcc
+
+CFLAGS = -Wall -Wextra -I./src -I./cJSON -O3
+LDFLAGS = -lm
+
+SRCS = src/dict.c \
+       src/json.c \
+       src/variable.c \
+       examples/benchmark.c \
+       cJSON/cJSON.c
+
+OBJS = $(SRCS:.c=.o)
+
+TARGET = benchmark_runner
+
+all: check_cjson $(TARGET)
+
+check_cjson:
+	@if [ ! -d "cJSON" ]; then \
+		echo "Error: cJSON directory not found!"; \
+		echo "Please run: git clone https://github.com/DaveGamble/cJSON.git"; \
+		exit 1; \
+	fi
+
+$(TARGET): $(OBJS)
+	$(CC) $(CFLAGS) -o $(TARGET) $(OBJS) $(LDFLAGS) && ./$(TARGET)
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+clean:
+	rm -f src/*.o examples/*.o cJSON/*.o $(TARGET)
