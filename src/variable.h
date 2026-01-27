@@ -61,6 +61,7 @@ variable get_var_string_arr(char **value, int size);
 variable get_var_null_arr(int);
 variable get_var_list(List *value);
 variable get_var_dict(struct Dict *value);
+variable get_var_unknown();
 List *create_list(variable value);
 void add_var_to_list(List *list, variable value);
 

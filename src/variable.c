@@ -155,6 +155,13 @@ variable get_var_list(List *list)
     return result;
 }
 
+variable get_var_unknown()
+{
+    variable result;
+    result.type = TYPE_UNKNOWN;
+    return result;
+}
+
 List *create_list(variable var)
 {
     List *list = (List *)malloc(sizeof(List));

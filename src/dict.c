@@ -40,7 +40,7 @@ Dict *createDict_null(char *key)
     variable variable = get_var_null();
     return createDict_var(key, variable);
 }
-Dict *createDict_list(char *key,List *list)
+Dict *createDict_list(char *key, List *list)
 {
     variable variable = get_var_list(list);
     return createDict_var(key, variable);
@@ -188,47 +188,60 @@ Dict *addDict_null_arr(Dict *d, char *key, int length)
 void free_dict(Dict *d);
 void free_list(List *l);
 
-void free_variable(variable var) {
-    switch (var.type) {
-        case TYPE_STRING:
-            if (var.value.string_v) free(var.value.string_v);
-            break;
+void free_variable(variable var)
+{
+    switch (var.type)
+    {
+    case TYPE_STRING:
+        if (var.value.string_v)
+            free(var.value.string_v);
+        break;
 
-        case TYPE_DICT:
-            if (var.value.dict_v) free_dict(var.value.dict_v);
-            break;
+    case TYPE_DICT:
+        if (var.value.dict_v)
+            free_dict(var.value.dict_v);
+        break;
 
-        case TYPE_LIST:
-            if (var.value.list_v) free_list(var.value.list_v);
-            break;
+    case TYPE_LIST:
+        if (var.value.list_v)
+            free_list(var.value.list_v);
+        break;
 
-        case TYPE_INT_ARR:
-            if (var.value.int_arr_v) free(var.value.int_arr_v);
-            break;
-        case TYPE_DOUBLE_ARR:
-            if (var.value.double_arr_v) free(var.value.double_arr_v);
-            break;
-        case TYPE_BOOL_ARR:
-            if (var.value.bool_arr_v) free(var.value.bool_arr_v);
-            break;
-        case TYPE_STRING_ARR:
-            if (var.value.string_arr_v) {
-                for (int i = 0; i < var.size; i++) {
-                    if (var.value.string_arr_v[i]) free(var.value.string_arr_v[i]);
-                }
-                free(var.value.string_arr_v);
+    case TYPE_INT_ARR:
+        if (var.value.int_arr_v)
+            free(var.value.int_arr_v);
+        break;
+    case TYPE_DOUBLE_ARR:
+        if (var.value.double_arr_v)
+            free(var.value.double_arr_v);
+        break;
+    case TYPE_BOOL_ARR:
+        if (var.value.bool_arr_v)
+            free(var.value.bool_arr_v);
+        break;
+    case TYPE_STRING_ARR:
+        if (var.value.string_arr_v)
+        {
+            for (int i = 0; i < var.size; i++)
+            {
+                if (var.value.string_arr_v[i])
+                    free(var.value.string_arr_v[i]);
             }
-            break;
-            
-        default:
-            break;
+            free(var.value.string_arr_v);
+        }
+        break;
+
+    default:
+        break;
     }
 }
 
-void free_list(List *l) {
+void free_list(List *l)
+{
     List *current = l;
-    while (current != NULL) {
-        List *next = current->next; 
+    while (current != NULL)
+    {
+        List *next = current->next;
 
         free_variable(current->item);
 
@@ -238,12 +251,15 @@ void free_list(List *l) {
     }
 }
 
-void free_dict(Dict *d) {
+void free_dict(Dict *d)
+{
     Dict *current = d;
-    while (current != NULL) {
+    while (current != NULL)
+    {
         Dict *next = current->next;
 
-        if (current->key) free(current->key);
+        if (current->key)
+            free(current->key);
 
         free_variable(current->value);
 
@@ -327,7 +343,7 @@ variable getDictVariable_var(Dict *d, char *key)
 {
     Dict *dict = getDictVariable(d, key);
     if (dict == NULL)
-        return get_var_null(); // look after !!!
+        return get_var_unknown();
     else
         return dict->value;
 }
