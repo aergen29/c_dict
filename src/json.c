@@ -436,6 +436,43 @@ void list_stringify(List *l, char *result)
     strcat(result, "]");
 }
 
+static void append_json_string(char *dest, const char *src) {
+    strcat(dest, "\"");
+
+    while (*src) {
+        switch (*src) {
+            case '"':
+                strcat(dest, "\\\"");
+                break;
+            case '\\':
+                strcat(dest, "\\\\");
+                break;
+            case '\b':
+                strcat(dest, "\\b");
+                break;
+            case '\f':
+                strcat(dest, "\\f");
+                break;
+            case '\n':
+                strcat(dest, "\\n"); 
+                break;
+            case '\r':
+                strcat(dest, "\\r");
+                break;
+            case '\t':
+                strcat(dest, "\\t");  
+                break;
+            default:
+                {
+                    char temp[2] = {*src, '\0'};
+                    strcat(dest, temp);
+                }
+        }
+        src++;
+    }
+    strcat(dest, "\"");
+}
+
 void json_stringify(Dict *d, char *result)
 {
     strcat(result, "{");
@@ -457,9 +494,7 @@ void json_stringify(Dict *d, char *result)
             strcat(result, buffer);
             break;
         case TYPE_STRING:
-            strcat(result, "\"");
-            strcat(result, temp->value.value.string_v);
-            strcat(result, "\"");
+            append_json_string(result, temp->value.value.string_v);
             break;
         case TYPE_BOOL:
             strcat(result, temp->value.value.bool_v ? "true" : "false");
